@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32602.291
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniPython_Lexer", "MiniPython_Lexer.vcxproj", "{6454388E-AB82-4E61-992A-466B9789704A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6454388E-AB82-4E61-992A-466B9789704A}.Debug|x64.ActiveCfg = Debug|x64
+		{6454388E-AB82-4E61-992A-466B9789704A}.Debug|x64.Build.0 = Debug|x64
+		{6454388E-AB82-4E61-992A-466B9789704A}.Debug|x86.ActiveCfg = Debug|Win32
+		{6454388E-AB82-4E61-992A-466B9789704A}.Debug|x86.Build.0 = Debug|Win32
+		{6454388E-AB82-4E61-992A-466B9789704A}.Release|x64.ActiveCfg = Release|x64
+		{6454388E-AB82-4E61-992A-466B9789704A}.Release|x64.Build.0 = Release|x64
+		{6454388E-AB82-4E61-992A-466B9789704A}.Release|x86.ActiveCfg = Release|Win32
+		{6454388E-AB82-4E61-992A-466B9789704A}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0F561A19-165A-4312-8FC9-441BC9E93C0D}
+	EndGlobalSection
+EndGlobal
