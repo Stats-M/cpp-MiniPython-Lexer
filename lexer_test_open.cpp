@@ -51,7 +51,7 @@ void TestNumbers()
 
     ASSERT_EQUAL(lexer.CurrentToken(), Token(token_type::Number{ 42 }));
     ASSERT_EQUAL(lexer.NextToken(), Token(token_type::Number{ 15 }));
-    // Отрицательные числа формируются на этапе синтаксического анализа
+    // Negative values form at syntax analyse stage
     ASSERT_EQUAL(lexer.NextToken(), Token(token_type::Char{ '-' }));
     ASSERT_EQUAL(lexer.NextToken(), Token(token_type::Number{ 53 }));
 }

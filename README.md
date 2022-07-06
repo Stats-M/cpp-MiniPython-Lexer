@@ -1,5 +1,5 @@
 ### cpp-MiniPython-Lexer
-# My realization of simple lexer for Mini-Python (Mython)
+# My simple Lexer for Mini-Python (Mython)
 ### Спринт 15: реализация лексера для языка Mython.
 Служит примером разбора лексем из потока входящих символов с 
 формированием токенов и последующей их 
