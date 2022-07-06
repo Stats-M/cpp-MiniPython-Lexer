@@ -15,18 +15,18 @@ namespace token_type
 struct Number
 {
     // Лексема «число»
-    int value;   // число
+    int value;
 };
 
 struct Id
 {
     // Лексема «идентификатор»
-    ::std::string value;  // Имя идентификатора
+    ::std::string value;
 };
 
 struct Char
 {   // Лексема «символ»
-    char value;  // код символа
+    char value;
 };
 
 struct String
