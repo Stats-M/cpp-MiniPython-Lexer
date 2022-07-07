@@ -1,4 +1,4 @@
-#include "lexer.h"
+ï»¿#include "lexer.h"
 
 #include <algorithm>
 #include <charconv>
@@ -84,20 +84,20 @@ std::ostream& operator<<(std::ostream& os, const Token& rhs)
     return os << "Unknown token :("sv;
 }
 
-Lexer::Lexer(std::istream& /*input*/)
+Lexer::Lexer(std::istream& input) : in_stream_(input)
 {
-    // Ðåàëèçóéòå êîíñòðóêòîð ñàìîñòîÿòåëüíî
+    // ÐšÐ¾Ð½ÑÑ‚Ñ€ÑƒÐºÑ‚Ð¾Ñ€ Ð¿Ð¾Ð»ÑƒÑ‡Ð°ÐµÑ‚ ÑÑÑ‹Ð»ÐºÑƒ Ð½Ð° Ð¿Ð¾Ñ‚Ð¾Ðº Ð²Ð²Ð¾Ð´Ð°
 }
 
 const Token& Lexer::CurrentToken() const
 {
-    // Çàãëóøêà. Ðåàëèçóéòå ìåòîä ñàìîñòîÿòåëüíî
+    //TODO Ð—Ð°Ð³Ð»ÑƒÑˆÐºÐ°. Ð ÐµÐ°Ð»Ð¸Ð·ÑƒÐ¹Ñ‚Ðµ Ð¼ÐµÑ‚Ð¾Ð´ ÑÐ°Ð¼Ð¾ÑÑ‚Ð¾ÑÑ‚ÐµÐ»ÑŒÐ½Ð¾
     throw std::logic_error("Not implemented"s);
 }
 
 Token Lexer::NextToken()
 {
-    // Çàãëóøêà. Ðåàëèçóéòå ìåòîä ñàìîñòîÿòåëüíî
+    //TODO Ð—Ð°Ð³Ð»ÑƒÑˆÐºÐ°. Ð ÐµÐ°Ð»Ð¸Ð·ÑƒÐ¹Ñ‚Ðµ Ð¼ÐµÑ‚Ð¾Ð´ ÑÐ°Ð¼Ð¾ÑÑ‚Ð¾ÑÑ‚ÐµÐ»ÑŒÐ½Ð¾
     throw std::logic_error("Not implemented"s);
 }
 

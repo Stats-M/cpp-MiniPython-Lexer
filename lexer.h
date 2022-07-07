@@ -165,8 +165,7 @@ public:
 class Lexer
 {
 public:
-    explicit Lexer(std::istream& input) : in_stream_(input)
-    {}
+    explicit Lexer(std::istream& input);
 
     // Возвращает ссылку на текущий токен или token_type::Eof, если поток токенов закончился
     [[nodiscard]] const Token& CurrentToken() const;
@@ -180,7 +179,7 @@ public:
     const T& Expect() const
     {
         using namespace std::literals;
-        // Заглушка. Реализуйте метод самостоятельно
+        //TODO Заглушка. Реализуйте метод самостоятельно
         throw LexerError("Not implemented"s);
     }
 
@@ -190,7 +189,7 @@ public:
     void Expect(const U& /*value*/) const
     {
         using namespace std::literals;
-        // Заглушка. Реализуйте метод самостоятельно
+        //TODO Заглушка. Реализуйте метод самостоятельно
         throw LexerError("Not implemented"s);
     }
 
@@ -200,7 +199,7 @@ public:
     const T& ExpectNext()
     {
         using namespace std::literals;
-        // Заглушка. Реализуйте метод самостоятельно
+        //TODO Заглушка. Реализуйте метод самостоятельно
         throw LexerError("Not implemented"s);
     }
 
@@ -210,14 +209,15 @@ public:
     void ExpectNext(const U& /*value*/)
     {
         using namespace std::literals;
-        // Заглушка. Реализуйте метод самостоятельно
+        //TODO Заглушка. Реализуйте метод самостоятельно
         throw LexerError("Not implemented"s);
     }
 
 private:
     //TODO Реализуйте приватную часть самостоятельно
-    Token current_token_;
-    const std::istream& in_stream_;    // Ссылка на поток ввода
+
+    Token current_token_;    // Текущий токен
+    const std::istream& in_stream_;    // const ссылка на поток ввода лексера
 };
 
 }  // namespace parse
