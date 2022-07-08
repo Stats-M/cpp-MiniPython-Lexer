@@ -1,8 +1,8 @@
-п»ї#include "lexer.h"
+#include "lexer.h"
 
 #include <algorithm>
 #include <charconv>
-#include <unordered_map>
+//#include <unordered_map>
 
 using namespace std;
 
@@ -86,19 +86,64 @@ std::ostream& operator<<(std::ostream& os, const Token& rhs)
 
 Lexer::Lexer(std::istream& input) : in_stream_(input)
 {
-    // РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РїРѕР»СѓС‡Р°РµС‚ СЃСЃС‹Р»РєСѓ РЅР° РїРѕС‚РѕРє РІРІРѕРґР°
+    current_token_it_ = tokens_.begin();
+    // Для автоматического разбора входящего потока символов
+    // при создании объекта лексера, раскомментируйте строку ниже
+    //ParseInputStream(in_stream_);
 }
 
 const Token& Lexer::CurrentToken() const
 {
-    //TODO Р—Р°РіР»СѓС€РєР°. Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
-    throw std::logic_error("Not implemented"s);
+    return *current_token_it_;
 }
+
 
 Token Lexer::NextToken()
 {
-    //TODO Р—Р°РіР»СѓС€РєР°. Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
+    //TODO Заглушка. Реализуйте метод самостоятельно
     throw std::logic_error("Not implemented"s);
+}
+
+
+void Lexer::ParseInputStream(std::istream& istr)
+{
+    // Логика работы парсера:
+    // Пока в потоке есть символы, последовательно выполняем проверки
+    //  1. Проверить на отступ
+    //  2. Проверить на ключевые слова и идентификаторы
+    //  3. Проверить на длинные операторы (например, <=)
+    //  4. Проверить на короткие операторы (например, = или :)
+    //  5. Проверить на значения для переменных (строки или цифры)
+    //  6. Проверить на комментарии
+    //  7. Проверить на пробелы в конце строки
+    //  8. Проверить на конец строки
+
+    // Инициализирум переменные
+    spaces_counter_ = 0;
+    tokens_.clear();
+    current_token_it_ = tokens_.begin();
+
+    // Основной цикл обработки входящего потока.
+    while (istr.peek())
+    {
+        ParseNewLine(istr);
+    }
+
+
+    // Разбор потока завершен
+    tokens_.emplace_back(token_type::Eof{});
+    // Обновляем итератор, указывающий на текущий токен
+    current_token_it_ = tokens_.begin();
+}
+
+
+void Lexer::ParseIndent(std::istream& istr)
+{
+}
+
+
+void Lexer::ParseNewLine(std::istream& istr)
+{
 }
 
 }  // namespace parse

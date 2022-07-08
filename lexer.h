@@ -1,4 +1,9 @@
-п»ї#pragma once
+/*
+ Класс лексического анализатора для разбора программы на языке Mini-python (Mython). 
+ Чтение данных производится из входящего потока std::istream
+*/
+
+#pragma once
 
 #include <iosfwd>
 #include <optional>
@@ -6,115 +11,119 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <vector>
+#include <map>
+
 
 namespace parse
 {
 
+// Пространство имен всех доступных типов токенов (лексем языка)
 namespace token_type
 {
 struct Number
 {
-    // Lexeme В«NumberВ»
+    // Lexeme «Number»
     int value;
 };
 
 struct Id
 {
-    // Lexeme В«IDВ»
+    // Lexeme «ID»
     ::std::string value;
 };
 
 struct Char
 {
-    // Lexeme В«CharВ»
+    // Lexeme «Char»
     char value;
 };
 
 struct String
 {  
-    // Lexem В«const StringВ»
+    // Lexem «const String»
     ::std::string value;
 };
 
 struct Class
 {
-    // Р›РµРєСЃРµРјР° В«classВ»
+    // Лексема «class»
 };
 struct Return
 {
-    // Р›РµРєСЃРµРјР° В«returnВ»
+    // Лексема «return»
 };
 struct If
 {
-    // Р›РµРєСЃРµРјР° В«ifВ»
+    // Лексема «if»
 };
 struct Else
 {
-    // Р›РµРєСЃРµРјР° В«elseВ»
+    // Лексема «else»
 };
 struct Def
 {
-    // Р›РµРєСЃРµРјР° В«defВ»
+    // Лексема «def»
 };
 struct Newline
 {
-    // Р›РµРєСЃРµРјР° В«РєРѕРЅРµС† СЃС‚СЂРѕРєРёВ»
+    // Лексема «конец строки»
 };
 struct Print
 {
-    // Р›РµРєСЃРµРјР° В«printВ»
+    // Лексема «print»
 };
 struct Indent
 {
-    // Р›РµРєСЃРµРјР° В«СѓРІРµР»РёС‡РµРЅРёРµ РѕС‚СЃС‚СѓРїР°В», СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РґРІСѓРј РїСЂРѕР±РµР»Р°Рј
+    // Лексема «увеличение отступа», соответствует двум пробелам
 };
 struct Dedent
 {
-    // Р›РµРєСЃРµРјР° В«СѓРјРµРЅСЊС€РµРЅРёРµ РѕС‚СЃС‚СѓРїР°В»
+    // Лексема «уменьшение отступа»
 };
 struct Eof
 {
-    // Р›РµРєСЃРµРјР° В«РєРѕРЅРµС† С„Р°Р№Р»Р°В»
+    // Лексема «конец файла»
 };
 struct And
 {
-    // Р›РµРєСЃРµРјР° В«andВ»
+    // Лексема «and»
 };
 struct Or
 {
-    // Р›РµРєСЃРµРјР° В«orВ»
+    // Лексема «or»
 };
 struct Not
 {
-    // Р›РµРєСЃРµРјР° В«notВ»
+    // Лексема «not»
 };
 struct Eq
 {
-    // Р›РµРєСЃРµРјР° В«==В»
+    // Лексема «==»
 };
 struct NotEq
 {
-    // Р›РµРєСЃРµРјР° В«!=В»
+    // Лексема «!=»
 };
 struct LessOrEq
 {
-    // Р›РµРєСЃРµРјР° В«<=В»
+    // Лексема «<=»
 };
 struct GreaterOrEq
 {
-    // Р›РµРєСЃРµРјР° В«>=В»
+    // Лексема «>=»
 };
 struct None
 {
-    // Р›РµРєСЃРµРјР° В«NoneВ»
+    // Лексема «None»
 };
 struct True
 {
-    // Р›РµРєСЃРµРјР° В«TrueВ»
+    // Лексема «True»
 };
 struct False
 {
-    // Р›РµРєСЃРµРјР° В«FalseВ»
+    // Лексема «False»
 };
 
 }  // namespace token_type
@@ -127,6 +136,7 @@ using TokenBase
     token_type::Eq, token_type::NotEq, token_type::LessOrEq, token_type::GreaterOrEq,
     token_type::None, token_type::True, token_type::False, token_type::Eof>;
 
+// Структура Token - основная единица информации лексера
 struct Token : TokenBase
 {
     // Makes available all std::variant constructors
@@ -162,62 +172,118 @@ public:
     using std::runtime_error::runtime_error;
 };
 
+
 class Lexer
 {
 public:
+    // Конструктор для указанного потока ввода
     explicit Lexer(std::istream& input);
 
-    // Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃСЃС‹Р»РєСѓ РЅР° С‚РµРєСѓС‰РёР№ С‚РѕРєРµРЅ РёР»Рё token_type::Eof, РµСЃР»Рё РїРѕС‚РѕРє С‚РѕРєРµРЅРѕРІ Р·Р°РєРѕРЅС‡РёР»СЃСЏ
+    // Возвращает ссылку на текущий токен или token_type::Eof, если поток токенов закончился
     [[nodiscard]] const Token& CurrentToken() const;
 
-    // Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃР»РµРґСѓСЋС‰РёР№ С‚РѕРєРµРЅ, Р»РёР±Рѕ token_type::Eof, РµСЃР»Рё РїРѕС‚РѕРє С‚РѕРєРµРЅРѕРІ Р·Р°РєРѕРЅС‡РёР»СЃСЏ
+    // Возвращает следующий токен, либо token_type::Eof, если поток токенов закончился
     Token NextToken();
 
-    // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ С‚РѕРєРµРЅ РёРјРµРµС‚ С‚РёРї T, РјРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ СЃСЃС‹Р»РєСѓ РЅР° РЅРµРіРѕ.
-    // Р’ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РјРµС‚РѕРґ РІС‹Р±СЂР°СЃС‹РІР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ LexerError
+    // Если текущий токен имеет тип T, метод возвращает ссылку на него.
+    // В противном случае метод выбрасывает исключение LexerError
+    // USAGE SAMPLE:
+    // lexer.Expect<token_type::Class>(); - checks that current token is Class
     template <typename T>
     const T& Expect() const
     {
         using namespace std::literals;
-        //TODO Р—Р°РіР»СѓС€РєР°. Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
-        throw LexerError("Not implemented"s);
+        if (!current_token_.Is<T>())
+        {
+            throw LexerError("Token::Expect() method has failed."s);
+        }
     }
 
-    // РњРµС‚РѕРґ РїСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ С‚РµРєСѓС‰РёР№ С‚РѕРєРµРЅ РёРјРµРµС‚ С‚РёРї T, Р° СЃР°Рј С‚РѕРєРµРЅ СЃРѕРґРµСЂР¶РёС‚ Р·РЅР°С‡РµРЅРёРµ value.
-    // Р’ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РјРµС‚РѕРґ РІС‹Р±СЂР°СЃС‹РІР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ LexerError
+    // Метод проверяет, что текущий токен имеет тип T, а сам токен содержит значение value.
+    // В противном случае метод выбрасывает исключение LexerError
+    // USAGE SAMPLE:
+    // lexer.Expect<token_type::Char>(':'); - checks that current token is Char with valie ':'
     template <typename T, typename U>
-    void Expect(const U& /*value*/) const
+    void Expect(const U& value) const
     {
         using namespace std::literals;
-        //TODO Р—Р°РіР»СѓС€РєР°. Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
-        throw LexerError("Not implemented"s);
+        // Создаем на основе value другой токен типа T...
+        Token other_token(T{ value });
+        // ... и сравниваем его значение со значением текущего токена
+        if (current_token_ != other_token)
+        {
+            throw LexerError("Token::Expect(value) method has failed."s);
+        }
     }
 
-    // Р•СЃР»Рё СЃР»РµРґСѓСЋС‰РёР№ С‚РѕРєРµРЅ РёРјРµРµС‚ С‚РёРї T, РјРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ СЃСЃС‹Р»РєСѓ РЅР° РЅРµРіРѕ.
-    // Р’ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РјРµС‚РѕРґ РІС‹Р±СЂР°СЃС‹РІР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ LexerError
+    // Если следующий токен имеет тип T, метод возвращает ссылку на него.
+    // В противном случае метод выбрасывает исключение LexerError
+    // USAGE SAMPLE:
+    // auto name = lexer.ExpectNext<token_type::Id>().value;
     template <typename T>
     const T& ExpectNext()
     {
         using namespace std::literals;
-        //TODO Р—Р°РіР»СѓС€РєР°. Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
+        //TODO Заглушка. Реализуйте метод самостоятельно
         throw LexerError("Not implemented"s);
     }
 
-    // РњРµС‚РѕРґ РїСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ СЃР»РµРґСѓСЋС‰РёР№ С‚РѕРєРµРЅ РёРјРµРµС‚ С‚РёРї T, Р° СЃР°Рј С‚РѕРєРµРЅ СЃРѕРґРµСЂР¶РёС‚ Р·РЅР°С‡РµРЅРёРµ value.
-    // Р’ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РјРµС‚РѕРґ РІС‹Р±СЂР°СЃС‹РІР°РµС‚ РёСЃРєР»СЋС‡РµРЅРёРµ LexerError
+    // Метод проверяет, что следующий токен имеет тип T, а сам токен содержит значение value.
+    // В противном случае метод выбрасывает исключение LexerError
+    // USAGE SAMPLE:
+    // lexer.ExpectNext<token_type::Char>(':'); - checks that next token is Char with valie ':'
     template <typename T, typename U>
     void ExpectNext(const U& /*value*/)
     {
         using namespace std::literals;
-        //TODO Р—Р°РіР»СѓС€РєР°. Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
+        //TODO Заглушка. Реализуйте метод самостоятельно
         throw LexerError("Not implemented"s);
     }
 
 private:
-    //TODO Р РµР°Р»РёР·СѓР№С‚Рµ РїСЂРёРІР°С‚РЅСѓСЋ С‡Р°СЃС‚СЊ СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ
+    //TODO Реализуйте приватную часть самостоятельно
 
-    Token current_token_;    // РўРµРєСѓС‰РёР№ С‚РѕРєРµРЅ
-    const std::istream& in_stream_;    // const СЃСЃС‹Р»РєР° РЅР° РїРѕС‚РѕРє РІРІРѕРґР° Р»РµРєСЃРµСЂР°
+    // Словарь ключевых слов программы на языке Mython,
+    // которым соответствуют определенные лексемы
+    const std::map<std::string, Token> keywords_map_ =
+    {
+        {std::string{"class"},  token_type::Class{} },
+        {std::string{"return"}, token_type::Return{}},
+        {std::string{"if"},     token_type::If{}    },
+        {std::string{"else"},   token_type::Else{}  },
+        {std::string{"def"},    token_type::Def{}   },
+        {std::string{"print"},  token_type::Print{} },
+        {std::string{"and"},    token_type::And{}   },
+        {std::string{"or"},     token_type::Or{}    },
+        {std::string{"not"},    token_type::Not{}   },
+        {std::string{"None"},   token_type::None{}  },
+        {std::string{"True"},   token_type::True{}  },
+        {std::string{"False"},  token_type::False{} }
+    };
+
+    // Вектор лексем разобранного текста программы
+    std::vector<Token> tokens_;
+    // Итератор, указывающий на текущий токен
+    std::vector<Token>::iterator current_token_it_;
+    // Const ссылка на поток ввода лексера
+    const std::istream& in_stream_;
+    // TODO Может быть, перенести в ParseInputStream()? Или static?
+    // Счетчик пробелов
+    int spaces_counter_ = 0;
+
+
+
+
+    // Точка входа разбора текста программы на лексемы
+    void ParseInputStream(std::istream& istr);
+
+    // Обработка отступов
+    void ParseIndent(std::istream& istr);
+    // Обработка потока на наличие конца строки
+    void ParseNewLine(std::istream& istr);
+
+
+
 };
 
 }  // namespace parse
