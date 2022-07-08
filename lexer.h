@@ -13,7 +13,7 @@
 #include <variant>
 #include <vector>
 #include <map>
-
+#include <cctype>    // for isalpha() etc.
 
 namespace parse
 {
@@ -243,6 +243,9 @@ public:
 private:
     //TODO Реализуйте приватную часть самостоятельно
 
+    // Количество пробелов на 1 отступ
+    const int SPACES_PER_INDENT = 2;
+
     // Словарь ключевых слов программы на языке Mython,
     // которым соответствуют определенные лексемы
     const std::map<std::string, Token> keywords_map_ =
@@ -261,15 +264,14 @@ private:
         {std::string{"False"},  token_type::False{} }
     };
 
-    // Вектор лексем разобранного текста программы
+    // Вектор лексем разобранного текста программы (результат работы лексера)
     std::vector<Token> tokens_;
     // Итератор, указывающий на текущий токен
     std::vector<Token>::iterator current_token_it_;
     // Const ссылка на поток ввода лексера
     const std::istream& in_stream_;
-    // TODO Может быть, перенести в ParseInputStream()? Или static?
-    // Счетчик пробелов
-    int spaces_counter_ = 0;
+    // Глобальный счетчик отступов. Возможно, перенести в ParseInputStream() или сделать static
+    int global_indent_counter_ = 0;
 
 
 
@@ -279,10 +281,20 @@ private:
 
     // Обработка отступов
     void ParseIndent(std::istream& istr);
+    // Обработка строк и экранированных символов
+    void ParseString(std::istream& istr);
+    // Обработка ключевых слов и идентификаторов
+    void ParseKeywords(std::istream& istr);
     // Обработка потока на наличие конца строки
     void ParseNewLine(std::istream& istr);
 
 
+
+    // Обработка комментариев
+    void ParseComments(std::istream& istr);
+
+    // Обрезаем лидирующие пробелы
+    void TrimSpaces(std::istream& istr);
 
 };
 
