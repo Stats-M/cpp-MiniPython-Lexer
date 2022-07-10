@@ -86,10 +86,18 @@ std::ostream& operator<<(std::ostream& os, const Token& rhs)
 
 Lexer::Lexer(std::istream& input) : in_stream_(input)
 {
-    current_token_it_ = tokens_.begin();
-    // Для автоматического разбора входящего потока символов
-    // при создании объекта лексера, раскомментируйте строку ниже
-    //ParseInputStream(in_stream_);
+    // Инициализируем итератор
+    // Отключено, т.к. вызов парсера теперь производится из конструктора
+    //current_token_it_ = tokens_.begin();
+
+    // По заданию требуется разбор входящего потока при создании объекта
+    ParseInputStream(input);
+
+    /*
+    // Альтернатива - непосредственный возврат ParseInputStream() итератора
+    // т.к. требуется готовность вектора токенов сразу при создании лексера
+    current_token_it_ = ParseInputStreamEx(input);
+    */
 }
 
 const Token& Lexer::CurrentToken() const
@@ -100,8 +108,16 @@ const Token& Lexer::CurrentToken() const
 
 Token Lexer::NextToken()
 {
-    //TODO Заглушка. Реализуйте метод самостоятельно
-    throw std::logic_error("Not implemented"s);
+    // Последний токен всегда Eof. Дальше него не сдвигаем итератор 
+    if ((current_token_it_ + 1) == tokens_.end())
+//    if (current_token_it_ == tokens_.end())
+    {
+        // Следующего токена нет, это будет уже tokens_.end(). Возвращаем
+        // текущий токен Eof, сколько бы ни было запросов NextToken()
+        return *current_token_it_;
+        //return token_type::Eof{};
+    }
+    return *(++current_token_it_);
 }
 
 
@@ -110,12 +126,12 @@ void Lexer::ParseInputStream(std::istream& istr)
     // Логика работы парсера:
     // Пока в потоке есть символы, последовательно выполняем проверки
     //  1. Проверить на отступ
-    //  2. Проверить на строки
-    //  3. Проверить на длинные (например, <=) и короткие (= или :) символы
-    //  4. Проверить на ключевые слова и идентификаторы
-    //  5. Проверить на числа
-    //  6. Проверить на комментарии
-    //  7. Проверить на пробелы в конце строки
+    //  2. Проверить на строки (чтобы обработать ' и " до пункта 4)
+    //  3. Проверить на ключевые слова и идентификаторы
+    //  4. Проверить на длинные (например, <=) и короткие (= или :) символы
+    //  5. Проверить на комментарии
+    //  6. Проверить на числа
+    //  7. Проверить на одиночные пробелы, не являющиеся отступами
     //  8. Проверить на конец строки
 
     // Инициализирум переменные
@@ -127,16 +143,23 @@ void Lexer::ParseInputStream(std::istream& istr)
     TrimSpaces(istr);
 
     // Основной цикл обработки входящего потока
-    while (istr.peek())
+    // NB: while (istr.peek()) всегда возвращает true! Не подходит для условия
+    while (istr)
     {
-        ParseIndent(istr);
+        // Отступы перенесены в ParseNewLine()
+        // Здесь это может конфликтовать с пробелами внутри строк
+        //ParseIndent(istr);
+
         ParseString(istr);
         ParseKeywords(istr);
-        ParseNewLine(istr);
+        ParseChars(istr);  // + проверка комментариев внутри
+        ParseNumbers(istr);
+        TrimSpaces(istr);
+        ParseNewLine(istr);  // + проверка отступов внутри
     }
 
 
-    // Разбор потока завершен
+    // Разбор потока завершен. Добавляем токен конца потока
     tokens_.emplace_back(token_type::Eof{});
     // Обновляем итератор, указывающий на текущий токен
     current_token_it_ = tokens_.begin();
@@ -205,11 +228,9 @@ void Lexer::ParseString(std::istream& istr)
 {
     char open_char = istr.get();
 
-    // Если открывающий символ - любая кавычка...
+    // Если открывающий символ - любая кавычка, то это строка
     if ((open_char == '\'') || (open_char == '\"'))
     {
-        // ...это строка
-
         char ch;
         std::string result;
 
@@ -291,9 +312,9 @@ void Lexer::ParseString(std::istream& istr)
             throw LexerError("ParseString() has exited without find end-of-string character"s);
         }
     }
-    // ... иначе это не строка, возвращаем символ в поток
     else
     {
+        // ... иначе это не строка, возвращаем символ в поток
         istr.putback(open_char);
     }
 }
@@ -323,7 +344,7 @@ void Lexer::ParseKeywords(std::istream& istr)
                 break;
             }
         }
-        // Если наступил конец потока, это допустимо.
+        // Если наступил конец потока раньше break, это допустимо.
 
         // Добавляем ключевое слово или ID в вектор токенов
         if (keywords_map_.find(keyword) != keywords_map_.end())
@@ -335,11 +356,128 @@ void Lexer::ParseKeywords(std::istream& istr)
             tokens_.emplace_back(token_type::Id{ keyword });
         }
     }
+
+    // После ключевых слов часто следуют пробелы, 
+    // делаем inplace проверку, чтобы не ждать вызов
+    // триммера пробелов полный основной цикл парсера
+    TrimSpaces(istr);
+}
+
+
+void Lexer::ParseChars(std::istream& istr)
+{
+    // До символов часто следуют пробелы, 
+    // делаем inplace проверку, чтобы не ждать вызов
+    // триммера пробелов полный основной цикл парсера
+    TrimSpaces(istr);
+
+    char ch;
+    istr.get(ch);
+
+    // Обрабатываем только символы пунктуации
+    if (std::ispunct(ch))
+    {
+        if (ch == '#')
+        {
+            // Это комментарий. Обрабатываем отдельно и выходим
+            istr.putback(ch);
+            ParseComments(istr);
+            return;
+        }
+        else if ((ch == '=') && (istr.peek() == '='))
+        {
+            // Двойной символ ==
+            // Забираем из потока второй символ и запоминаем токен
+            istr.get();
+            tokens_.emplace_back(token_type::Eq{});
+        }
+        else if ((ch == '!') && (istr.peek() == '='))
+        {
+            // Двойной символ !=
+            // Забираем из потока второй символ и запоминаем токен
+            istr.get();
+            tokens_.emplace_back(token_type::NotEq{});
+        }
+        else if ((ch == '>') && (istr.peek() == '='))
+        {
+            // Двойной символ >=
+            // Забираем из потока второй символ и запоминаем токен
+            istr.get();
+            tokens_.emplace_back(token_type::GreaterOrEq{});
+        }
+        else if ((ch == '<') && (istr.peek() == '='))
+        {
+            // Двойной символ <=
+            // Забираем из потока второй символ и запоминаем токен
+            istr.get();
+            tokens_.emplace_back(token_type::LessOrEq{});
+        }
+        else
+        {
+            // Это одинарный символ. Добавляем токен на его основе
+            tokens_.emplace_back(token_type::Char{ ch });
+        }
+    }
+    else
+    {
+        // ... иначе возвращаем символ в поток
+        istr.putback(ch);
+    }
+
+    // После символов часто следуют пробелы, 
+    // делаем inplace проверку, чтобы не ждать вызов
+    // триммера пробелов полный основной цикл парсера
+    TrimSpaces(istr);
+}
+
+
+void Lexer::ParseNumbers(std::istream& istr)
+{
+    char ch = istr.peek();
+
+    // Обрабатываем только цифры
+    if (std::isdigit(ch))
+    {
+        std::string result;
+        while (istr.get(ch))
+        {
+            if (std::isdigit(ch))
+            {
+                result.push_back(ch);
+            }
+            else
+            {
+                // Вернем не цифровой символ и выйдем из цикла
+                istr.putback(ch);
+                break;
+            }
+        }
+        // Числа в Mython только integer
+        int num = std::stoi(result);
+        tokens_.emplace_back(token_type::Number{ num });
+    }
 }
 
 
 void Lexer::ParseNewLine(std::istream& istr)
 {
+    char ch = istr.peek();
+
+    if (ch == '\n')
+    {
+        istr.get(ch);
+        // В векторе токенов может быть только 1 новая строка подряд
+        //if (!tokens_.empty() && tokens_.back() != token_type::Newline{})
+        if (!tokens_.empty() && (!tokens_.back().Is<token_type::Newline>()))
+        {
+            tokens_.emplace_back(token_type::Newline{});
+        }
+
+        // Перенесено из ParseInputStream()
+        // Проверка отступа имеет смысл только после перевода строки
+        // В остальных случаях это просто пробелы в середине/конце строки
+        ParseIndent(istr);
+    }
 }
 
 
@@ -354,7 +492,8 @@ void Lexer::ParseComments(std::istream& istr)
         std::string tmp_str;
         std::getline(istr, tmp_str, '\n');
 
-        // Вернем последний символ \n, если только это не конец потока
+        // Вернем перевод строки \n, если только это не конец потока
+        // (в конце потока \n игнорируется)
         if (istr.rdstate() != std::ios_base::eofbit)
         {
             istr.putback('\n');
@@ -366,6 +505,7 @@ void Lexer::ParseComments(std::istream& istr)
     }
     // else это не комментарий, ничего не делаем
 }
+
 
 void Lexer::TrimSpaces(std::istream& istr)
 {

@@ -193,10 +193,11 @@ public:
     const T& Expect() const
     {
         using namespace std::literals;
-        if (!current_token_.Is<T>())
+        if (!(*current_token_it_).Is<T>())
         {
             throw LexerError("Token::Expect() method has failed."s);
         }
+        return CurrentToken().As<T>();
     }
 
     // Метод проверяет, что текущий токен имеет тип T, а сам токен содержит значение value.
@@ -210,10 +211,11 @@ public:
         // Создаем на основе value другой токен типа T...
         Token other_token(T{ value });
         // ... и сравниваем его значение со значением текущего токена
-        if (current_token_ != other_token)
+        if (*current_token_it_ != other_token)
         {
             throw LexerError("Token::Expect(value) method has failed."s);
         }
+        // Ошибки нет, выход
     }
 
     // Если следующий токен имеет тип T, метод возвращает ссылку на него.
@@ -223,9 +225,8 @@ public:
     template <typename T>
     const T& ExpectNext()
     {
-        using namespace std::literals;
-        //TODO Заглушка. Реализуйте метод самостоятельно
-        throw LexerError("Not implemented"s);
+        NextToken();
+        return Expect<T>();
     }
 
     // Метод проверяет, что следующий токен имеет тип T, а сам токен содержит значение value.
@@ -233,16 +234,13 @@ public:
     // USAGE SAMPLE:
     // lexer.ExpectNext<token_type::Char>(':'); - checks that next token is Char with valie ':'
     template <typename T, typename U>
-    void ExpectNext(const U& /*value*/)
+    void ExpectNext(const U& value)
     {
-        using namespace std::literals;
-        //TODO Заглушка. Реализуйте метод самостоятельно
-        throw LexerError("Not implemented"s);
+        NextToken();
+        Expect<T>(value);
     }
 
 private:
-    //TODO Реализуйте приватную часть самостоятельно
-
     // Количество пробелов на 1 отступ
     const int SPACES_PER_INDENT = 2;
 
@@ -267,17 +265,16 @@ private:
     // Вектор лексем разобранного текста программы (результат работы лексера)
     std::vector<Token> tokens_;
     // Итератор, указывающий на текущий токен
-    std::vector<Token>::iterator current_token_it_;
+    std::vector<Token>::const_iterator current_token_it_;
     // Const ссылка на поток ввода лексера
     const std::istream& in_stream_;
     // Глобальный счетчик отступов. Возможно, перенести в ParseInputStream() или сделать static
     int global_indent_counter_ = 0;
 
-
-
-
     // Точка входа разбора текста программы на лексемы
     void ParseInputStream(std::istream& istr);
+    //Альтенативная форма с возвратом итератора
+    //std::vector<Token>::const_iterator ParseInputStreamEx(std::istream& istr);
 
     // Обработка отступов
     void ParseIndent(std::istream& istr);
@@ -285,17 +282,17 @@ private:
     void ParseString(std::istream& istr);
     // Обработка ключевых слов и идентификаторов
     void ParseKeywords(std::istream& istr);
+    // Обработка символов
+    void ParseChars(std::istream& istr);
+    // Обработка чисел
+    void ParseNumbers(std::istream& istr);
     // Обработка потока на наличие конца строки
     void ParseNewLine(std::istream& istr);
-
-
-
     // Обработка комментариев
     void ParseComments(std::istream& istr);
 
     // Обрезаем лидирующие пробелы
     void TrimSpaces(std::istream& istr);
-
 };
 
 }  // namespace parse
